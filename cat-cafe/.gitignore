@@ -23,7 +23,6 @@ buildNumber.properties
 
 # Eclipse
 bin/
-.settings/
 .metadata/
 
 # NetBeans

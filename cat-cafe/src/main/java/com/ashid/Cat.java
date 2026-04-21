@@ -1,101 +1,94 @@
 package com.ashid;
 
+import java.util.Objects;
+
 public final class Cat implements Comparable<Cat> {
 
-    public final Date born;
-    public final Date came;
-    public Date adopted;
-    public final Pattern pattern;
-    public Double weight;
-    public final String name;
+  public final Date born;
+  public final Date came;
+  public Date adopted;
+  public final Pattern pattern;
+  public Double weight;
+  public final String name;
 
-    public Cat(
-            Date born,
-            Date came,
-            Pattern pattern,
-            Double weight,
-            String name
-    ) {
-        this.born = born;
-        this.came = came;
-        this.adopted = null;
-        this.pattern = pattern;
-        this.weight = weight;
-        this.name = name;
-    }
+  public Cat(
+    Date born,
+    Date came,
+    Pattern pattern,
+    Double weight,
+    String name
+  ) {
+    this.born = born;
+    this.came = came;
+    this.adopted = null;
+    this.pattern = pattern;
+    this.weight = weight;
+    this.name = name;
+  }
 
-    public static final class Date {
+  @Override
+  public int compareTo(Cat other) {
+    int cmp = this.name.compareToIgnoreCase(other.name);
+    if (cmp != 0) return cmp;
+    cmp = this.born.compareTo(other.born);
+    if (cmp != 0) return cmp;
+    cmp = this.came.compareTo(other.came);
+    if (cmp != 0) return cmp;
+    cmp = Integer.compare(this.pattern.ordinal(), other.pattern.ordinal());
+    if (cmp != 0) return cmp;
+    return this.weight.compareTo(other.weight);
+  }
 
-        private int date;
-        private int year;
-        private Month month;
+  @Override
+  public String toString() {
+    return (
+      "Name:    " +
+      name +
+      "\n" +
+      "Born:    " +
+      born +
+      "\n" +
+      "Came:    " +
+      came +
+      "\n" +
+      "Pattern: " +
+      pattern +
+      "\n" +
+      "Weight:  " +
+      weight +
+      " oz\n" +
+      "Adopted: " +
+      (adopted != null ? adopted : "Not yet adopted")
+    );
+  }
 
-        public Date(int date, int year, Month month) {
-            int maxDays = month.getMaxDays(year);
-            if (date < 1 || date > maxDays) {
-                throw new IllegalArgumentException(
-                        "Invalid day " +
-                                date +
-                                " for " +
-                                month +
-                                " " +
-                                year +
-                                ". Must be between 1 and " +
-                                maxDays +
-                                "."
-                );
-            }
-            this.date = date;
-            this.month = month;
-            this.year = year;
-        }
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (!(obj instanceof Cat)) return false;
+    Cat other = (Cat) obj;
+    return (
+      this.name.equals(other.name) &&
+      this.born.equals(other.born) &&
+      this.came.equals(other.came) &&
+      Objects.equals(this.weight, other.weight) &&
+      this.pattern == other.pattern
+    );
+  }
 
-        @Override
-        public String toString() {
-            return month + " " + date + ", " + year;
-        }
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, born, came, weight, pattern);
+  }
 
-        private enum Month {
-            JANUARY(31),
-            FEBRUARY(28),
-            MARCH(31),
-            APRIL(30),
-            MAY(31),
-            JUNE(30),
-            JULY(31),
-            AUGUST(31),
-            SEPTEMBER(30),
-            OCTOBER(31),
-            NOVEMBER(30),
-            DECEMBER(31);
-
-            private final int maxDays;
-
-            Month(int maxDays) {
-                this.maxDays = maxDays;
-            }
-
-            public int getMaxDays(int year) {
-                if (this == FEBRUARY && isLeapYear(year)) {
-                    return 29;
-                }
-                return maxDays;
-            }
-
-            private boolean isLeapYear(int year) {
-                return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-            }
-        }
-    }
-
-    public enum Pattern {
-        SOLID,
-        TABBY,
-        TORTOISESHELL,
-        CALICO,
-        BICOLOR,
-        COLORPOINT,
-        TICKED,
-        SPOTTED,
-    }
+  public enum Pattern {
+    SOLID,
+    TABBY,
+    TORTOISESHELL,
+    CALICO,
+    BICOLOR,
+    COLORPOINT,
+    TICKED,
+    SPOTTED,
+  }
 }

@@ -3,14 +3,14 @@ package com.ashid;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 
-public class MyListIterator<E extends Comparable<E>> implements Iterator<E> {
+public class ListIterator<E extends Comparable<E>> implements Iterator<E> {
 
-    private final MyList<E> list;
+    private final List<E> list;
     private E next;
     private int index;
     private int modCountCheck;
 
-    public MyListIterator(MyList<E> list) {
+    public ListIterator(List<E> list) {
         this.list = list;
         this.index = 0;
         this.modCountCheck = list.getModCount();
