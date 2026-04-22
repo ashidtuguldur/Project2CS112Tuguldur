@@ -3,7 +3,6 @@ package com.ashid;
 public class App {
 
   public static void main(String[] args) {
-    // Two identical cats — enter() should prevent the duplicate
     Cat a = new Cat(
       new Date(26, 2007, Month.JUNE),
       new Date(13, 2025, Month.AUGUST),
@@ -32,13 +31,12 @@ public class App {
     list.add(a);
 
     CatList catList = new CatList(list);
-    catList.enter(b); // duplicate — should be ignored
-    catList.enter(c); // new cat — should be added
+    catList.enter(b);
+    catList.enter(c);
 
-    System.out.println("=== All cats ===");
     catList.display();
 
-    System.out.println("=== Search: TABBY pattern ===");
+    System.out.println("TABBY");
     List<Cat> found = catList.search(
       null,
       Cat.Pattern.TABBY,
@@ -52,17 +50,17 @@ public class App {
       System.out.println();
     }
 
-    System.out.println("=== Delete 'Mochi' ===");
+    System.out.println("delete mochi");
     Cat removed = catList.delete("Mochi");
     System.out.println(
       "Removed: " + (removed != null ? removed.name : "not found")
     );
     System.out.println();
 
-    System.out.println("=== After deletion ===");
+    System.out.println("");
     catList.display();
 
-    System.out.println("=== Sort by arrival (CatComparator) ===");
+    System.out.println("Sort by arrival (CatComparator)");
     catList.cats.sort(new CatComparator());
     catList.display();
   }
