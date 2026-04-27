@@ -42,7 +42,6 @@ public class App {
       Cat.Pattern.TABBY,
       null,
       null,
-      null,
       null
     );
     for (Cat cat : found) {
