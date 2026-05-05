@@ -54,15 +54,18 @@ public class CatList {
   ) {
     List<Cat> results = new List<>();
     for (Cat c : cats) {
-      if (name != null && !c.name.toLowerCase().contains(name.toLowerCase())) continue;
+      if (
+        name != null && !c.name.toLowerCase().contains(name.toLowerCase())
+      ) continue;
       if (pattern != null && c.pattern != pattern) continue;
       if (minW != null && c.weight < minW) continue;
       if (maxW != null && c.weight > maxW) continue;
       if (dateQuery != null) {
         String q = dateQuery.toLowerCase();
-        boolean matchesBorn    = c.born.toString().toLowerCase().contains(q);
-        boolean matchesCame    = c.came.toString().toLowerCase().contains(q);
-        boolean matchesAdopted = c.adopted != null && c.adopted.toString().toLowerCase().contains(q);
+        boolean matchesBorn = c.born.toString().toLowerCase().contains(q);
+        boolean matchesCame = c.came.toString().toLowerCase().contains(q);
+        boolean matchesAdopted =
+          c.adopted != null && c.adopted.toString().toLowerCase().contains(q);
         if (!matchesBorn && !matchesCame && !matchesAdopted) continue;
       }
       results.add(c);

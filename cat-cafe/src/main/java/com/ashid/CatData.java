@@ -1,121 +1,358 @@
 package com.ashid;
 
+import java.sql.*;
+
 public class CatData {
 
+  private static final String DB_URL = "jdbc:sqlite:src/main/resources/cats.db";
+
   public static List<Cat> load() {
-    List<Cat> ls = new List<>();
+    try (Connection conn = DriverManager.getConnection(DB_URL)) {
+      initDB(conn);
+      List<Cat> ls = new List<>();
+      try (
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT * FROM cats")
+      ) {
+        while (rs.next()) {
+          Date born = new Date(
+            rs.getInt("born_day"),
+            rs.getInt("born_year"),
+            Month.valueOf(rs.getString("born_month"))
+          );
+          Date came = new Date(
+            rs.getInt("came_day"),
+            rs.getInt("came_year"),
+            Month.valueOf(rs.getString("came_month"))
+          );
+          Cat cat = new Cat(
+            born,
+            came,
+            Cat.Pattern.valueOf(rs.getString("pattern")),
+            rs.getDouble("weight"),
+            rs.getString("name")
+          );
+          String adoptedMonth = rs.getString("adopted_month");
+          if (adoptedMonth != null) {
+            cat.adopted = new Date(
+              rs.getInt("adopted_day"),
+              rs.getInt("adopted_year"),
+              Month.valueOf(adoptedMonth)
+            );
+          }
+          ls.add(cat);
+        }
+      }
+      return ls;
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to load cats from DB", e);
+    }
+  }
 
-    Cat luna = new Cat(
-      new Date(3, 2019, Month.APRIL),
-      new Date(15, 2022, Month.SEPTEMBER),
-      Cat.Pattern.CALICO, 92.0, "Luna"
+  private static void initDB(Connection conn) throws SQLException {
+    try (Statement stmt = conn.createStatement()) {
+      stmt.execute(
+        """
+            CREATE TABLE IF NOT EXISTS cats (
+                name TEXT PRIMARY KEY,
+                born_day INTEGER NOT NULL,
+                born_month TEXT NOT NULL,
+                born_year INTEGER NOT NULL,
+                came_day INTEGER NOT NULL,
+                came_month TEXT NOT NULL,
+                came_year INTEGER NOT NULL,
+                pattern TEXT NOT NULL,
+                weight REAL NOT NULL,
+                adopted_day INTEGER,
+                adopted_month TEXT,
+                adopted_year INTEGER
+            )
+        """
+      );
+      try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM cats")) {
+        if (rs.next() && rs.getInt(1) > 0) return;
+      }
+    }
+    insertAll(conn);
+  }
+
+  private static void insertAll(Connection conn) throws SQLException {
+    insert(
+      conn,
+      "Luna",
+      3,
+      Month.APRIL,
+      2019,
+      15,
+      Month.SEPTEMBER,
+      2022,
+      Cat.Pattern.CALICO,
+      92.0,
+      null
     );
-
-    Cat mochi = new Cat(
-      new Date(11, 2020, Month.JULY),
-      new Date(2, 2023, Month.FEBRUARY),
-      Cat.Pattern.TABBY, 108.5, "Mochi"
+    insert(
+      conn,
+      "Mochi",
+      11,
+      Month.JULY,
+      2020,
+      2,
+      Month.FEBRUARY,
+      2023,
+      Cat.Pattern.TABBY,
+      108.5,
+      new Date(20, 2023, Month.NOVEMBER)
     );
-    mochi.adopted = new Date(20, 2023, Month.NOVEMBER);
-
-    Cat shadow = new Cat(
-      new Date(22, 2018, Month.JANUARY),
-      new Date(7, 2021, Month.JUNE),
-      Cat.Pattern.SOLID, 135.0, "Shadow"
+    insert(
+      conn,
+      "Shadow",
+      22,
+      Month.JANUARY,
+      2018,
+      7,
+      Month.JUNE,
+      2021,
+      Cat.Pattern.SOLID,
+      135.0,
+      null
     );
-
-    Cat biscuit = new Cat(
-      new Date(5, 2021, Month.MARCH),
-      new Date(19, 2022, Month.OCTOBER),
-      Cat.Pattern.BICOLOR, 97.3, "Biscuit"
+    insert(
+      conn,
+      "Biscuit",
+      5,
+      Month.MARCH,
+      2021,
+      19,
+      Month.OCTOBER,
+      2022,
+      Cat.Pattern.BICOLOR,
+      97.3,
+      new Date(14, 2024, Month.JANUARY)
     );
-    biscuit.adopted = new Date(14, 2024, Month.JANUARY);
-
-    Cat pepper = new Cat(
-      new Date(17, 2017, Month.OCTOBER),
-      new Date(30, 2020, Month.AUGUST),
-      Cat.Pattern.TORTOISESHELL, 88.0, "Pepper"
+    insert(
+      conn,
+      "Pepper",
+      17,
+      Month.OCTOBER,
+      2017,
+      30,
+      Month.AUGUST,
+      2020,
+      Cat.Pattern.TORTOISESHELL,
+      88.0,
+      null
     );
-
-    Cat nimbus = new Cat(
-      new Date(29, 2022, Month.AUGUST),
-      new Date(11, 2023, Month.MAY),
-      Cat.Pattern.COLORPOINT, 76.5, "Nimbus"
+    insert(
+      conn,
+      "Nimbus",
+      29,
+      Month.AUGUST,
+      2022,
+      11,
+      Month.MAY,
+      2023,
+      Cat.Pattern.COLORPOINT,
+      76.5,
+      null
     );
-
-    Cat cheddar = new Cat(
-      new Date(14, 2016, Month.DECEMBER),
-      new Date(3, 2019, Month.MARCH),
-      Cat.Pattern.TABBY, 148.2, "Cheddar"
+    insert(
+      conn,
+      "Cheddar",
+      14,
+      Month.DECEMBER,
+      2016,
+      3,
+      Month.MARCH,
+      2019,
+      Cat.Pattern.TABBY,
+      148.2,
+      new Date(9, 2022, Month.JUNE)
     );
-    cheddar.adopted = new Date(9, 2022, Month.JUNE);
-
-    Cat maple = new Cat(
-      new Date(8, 2023, Month.FEBRUARY),
-      new Date(25, 2023, Month.JULY),
-      Cat.Pattern.TICKED, 64.0, "Maple"
+    insert(
+      conn,
+      "Maple",
+      8,
+      Month.FEBRUARY,
+      2023,
+      25,
+      Month.JULY,
+      2023,
+      Cat.Pattern.TICKED,
+      64.0,
+      null
     );
-
-    Cat ghost = new Cat(
-      new Date(30, 2015, Month.JUNE),
-      new Date(18, 2018, Month.NOVEMBER),
-      Cat.Pattern.COLORPOINT, 120.7, "Ghost"
+    insert(
+      conn,
+      "Ghost",
+      30,
+      Month.JUNE,
+      2015,
+      18,
+      Month.NOVEMBER,
+      2018,
+      Cat.Pattern.COLORPOINT,
+      120.7,
+      null
     );
-
-    Cat sable = new Cat(
-      new Date(1, 2021, Month.NOVEMBER),
-      new Date(14, 2022, Month.APRIL),
-      Cat.Pattern.SOLID, 111.0, "Sable"
+    insert(
+      conn,
+      "Sable",
+      1,
+      Month.NOVEMBER,
+      2021,
+      14,
+      Month.APRIL,
+      2022,
+      Cat.Pattern.SOLID,
+      111.0,
+      new Date(3, 2023, Month.AUGUST)
     );
-    sable.adopted = new Date(3, 2023, Month.AUGUST);
-
-    Cat freckle = new Cat(
-      new Date(19, 2020, Month.SEPTEMBER),
-      new Date(7, 2021, Month.DECEMBER),
-      Cat.Pattern.SPOTTED, 85.6, "Freckle"
+    insert(
+      conn,
+      "Freckle",
+      19,
+      Month.SEPTEMBER,
+      2020,
+      7,
+      Month.DECEMBER,
+      2021,
+      Cat.Pattern.SPOTTED,
+      85.6,
+      null
     );
-
-    Cat pebble = new Cat(
-      new Date(27, 2022, Month.MAY),
-      new Date(16, 2023, Month.JANUARY),
-      Cat.Pattern.BICOLOR, 73.9, "Pebble"
+    insert(
+      conn,
+      "Pebble",
+      27,
+      Month.MAY,
+      2022,
+      16,
+      Month.JANUARY,
+      2023,
+      Cat.Pattern.BICOLOR,
+      73.9,
+      null
     );
-
-    Cat hazel = new Cat(
-      new Date(12, 2019, Month.AUGUST),
-      new Date(4, 2021, Month.FEBRUARY),
-      Cat.Pattern.CALICO, 99.1, "Hazel"
+    insert(
+      conn,
+      "Hazel",
+      12,
+      Month.AUGUST,
+      2019,
+      4,
+      Month.FEBRUARY,
+      2021,
+      Cat.Pattern.CALICO,
+      99.1,
+      null
     );
-
-    Cat toast = new Cat(
-      new Date(6, 2023, Month.OCTOBER),
-      new Date(28, 2024, Month.MARCH),
-      Cat.Pattern.TABBY, 58.4, "Toast"
+    insert(
+      conn,
+      "Toast",
+      6,
+      Month.OCTOBER,
+      2023,
+      28,
+      Month.MARCH,
+      2024,
+      Cat.Pattern.TABBY,
+      58.4,
+      null
     );
-
-    Cat cosmos = new Cat(
-      new Date(15, 2018, Month.APRIL),
-      new Date(22, 2020, Month.JULY),
-      Cat.Pattern.SPOTTED, 103.3, "Cosmos"
+    insert(
+      conn,
+      "Cosmos",
+      15,
+      Month.APRIL,
+      2018,
+      22,
+      Month.JULY,
+      2020,
+      Cat.Pattern.SPOTTED,
+      103.3,
+      new Date(11, 2021, Month.APRIL)
     );
-    cosmos.adopted = new Date(11, 2021, Month.APRIL);
+  }
 
-    ls.add(luna);
-    ls.add(mochi);
-    ls.add(shadow);
-    ls.add(biscuit);
-    ls.add(pepper);
-    ls.add(nimbus);
-    ls.add(cheddar);
-    ls.add(maple);
-    ls.add(ghost);
-    ls.add(sable);
-    ls.add(freckle);
-    ls.add(pebble);
-    ls.add(hazel);
-    ls.add(toast);
-    ls.add(cosmos);
+  public static void save(Cat cat) {
+    try (Connection conn = DriverManager.getConnection(DB_URL)) {
+      insert(
+        conn,
+        cat.name,
+        cat.born.getDate(),
+        cat.born.getMonth(),
+        cat.born.getYear(),
+        cat.came.getDate(),
+        cat.came.getMonth(),
+        cat.came.getYear(),
+        cat.pattern,
+        cat.weight,
+        cat.adopted
+      );
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to save cat", e);
+    }
+  }
 
-    return ls;
+  public static void updateAdopted(Cat cat) {
+    try (Connection conn = DriverManager.getConnection(DB_URL)) {
+      String sql = "UPDATE cats SET adopted_day=?, adopted_month=?, adopted_year=? WHERE name=?";
+      try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        if (cat.adopted != null) {
+          ps.setInt(1, cat.adopted.getDate());
+          ps.setString(2, cat.adopted.getMonth().name());
+          ps.setInt(3, cat.adopted.getYear());
+        } else {
+          ps.setNull(1, Types.INTEGER);
+          ps.setNull(2, Types.VARCHAR);
+          ps.setNull(3, Types.INTEGER);
+        }
+        ps.setString(4, cat.name);
+        ps.executeUpdate();
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to update adopted date", e);
+    }
+  }
+
+  private static void insert(
+    Connection conn,
+    String name,
+    int bornDay,
+    Month bornMonth,
+    int bornYear,
+    int cameDay,
+    Month cameMonth,
+    int cameYear,
+    Cat.Pattern pattern,
+    double weight,
+    Date adopted
+  ) throws SQLException {
+    String sql = """
+          INSERT OR IGNORE INTO cats
+            (name, born_day, born_month, born_year, came_day, came_month, came_year, pattern, weight, adopted_day, adopted_month, adopted_year)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      """;
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setString(1, name);
+      ps.setInt(2, bornDay);
+      ps.setString(3, bornMonth.name());
+      ps.setInt(4, bornYear);
+      ps.setInt(5, cameDay);
+      ps.setString(6, cameMonth.name());
+      ps.setInt(7, cameYear);
+      ps.setString(8, pattern.name());
+      ps.setDouble(9, weight);
+      if (adopted != null) {
+        ps.setInt(10, adopted.getDate());
+        ps.setString(11, adopted.getMonth().name());
+        ps.setInt(12, adopted.getYear());
+      } else {
+        ps.setNull(10, Types.INTEGER);
+        ps.setNull(11, Types.VARCHAR);
+        ps.setNull(12, Types.INTEGER);
+      }
+      ps.executeUpdate();
+    }
   }
 }

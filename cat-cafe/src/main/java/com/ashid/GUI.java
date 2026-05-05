@@ -8,10 +8,10 @@ import javax.swing.*;
 public class GUI extends JFrame {
 
   private static final Color DARK_BROWN = new Color(0x48, 0x2E, 0x1D);
-  private static final Color MED_BROWN  = new Color(0x89, 0x5D, 0x2B);
-  private static final Color TAN        = new Color(0xA3, 0x96, 0x6A);
-  private static final Color CREAM      = new Color(0xF0, 0xDA, 0xAE);
-  private static final Color RUSSET     = new Color(0x90, 0x55, 0x3C);
+  private static final Color MED_BROWN = new Color(0x89, 0x5D, 0x2B);
+  private static final Color TAN = new Color(0xA3, 0x96, 0x6A);
+  private static final Color CREAM = new Color(0xF0, 0xDA, 0xAE);
+  private static final Color RUSSET = new Color(0x90, 0x55, 0x3C);
 
   private Font font;
   private Font headerFont;
@@ -48,7 +48,7 @@ public class GUI extends JFrame {
   private JButton adoptBtn;
   private Cat selectedCat;
 
-  private CatList cats;
+  private CatLinkedList cats;
 
   public GUI(List<Cat> ls) {
     super("Cat Cafe Data Base");
@@ -56,7 +56,8 @@ public class GUI extends JFrame {
     setLocation(100, 100);
     getContentPane().setLayout(new BorderLayout());
     getContentPane().setBackground(DARK_BROWN);
-    cats = new CatList(ls);
+    cats = new CatLinkedList();
+    for (Cat c : ls) cats.add(c);
 
     font = new Font("Times", Font.PLAIN, 16);
     headerFont = new Font("Times", Font.BOLD, 18);
@@ -67,13 +68,17 @@ public class GUI extends JFrame {
     getContentPane().add(sidebar, BorderLayout.WEST);
     getContentPane().add(buildMainPanel(), BorderLayout.CENTER);
 
-    refreshDisplay(cats.cats);
+    refreshDisplay(cats);
     setVisible(true);
     getRootPane().setDefaultButton(addBtn);
 
-    addWindowListener(new WindowAdapter() {
-      public void windowClosing(WindowEvent e) { System.exit(0); }
-    });
+    addWindowListener(
+      new WindowAdapter() {
+        public void windowClosing(WindowEvent e) {
+          System.exit(0);
+        }
+      }
+    );
   }
 
   private JPanel buildSidebar() {
@@ -86,7 +91,7 @@ public class GUI extends JFrame {
     tabRow.setBorder(BorderFactory.createEmptyBorder(6, 6, 0, 6));
 
     JButton searchTabBtn = makeTabButton("Search");
-    JButton addTabBtn    = makeTabButton("Add Cat");
+    JButton addTabBtn = makeTabButton("Add Cat");
     tabRow.add(searchTabBtn);
     tabRow.add(addTabBtn);
     sidebar.add(tabRow, BorderLayout.NORTH);
@@ -95,12 +100,14 @@ public class GUI extends JFrame {
     CardLayout cards = new CardLayout();
     JPanel cardPanel = new JPanel(cards);
     cardPanel.setBackground(CREAM);
-    cardPanel.setBorder(BorderFactory.createMatteBorder(0, 6, 6, 6, DARK_BROWN));
+    cardPanel.setBorder(
+      BorderFactory.createMatteBorder(0, 6, 6, 6, DARK_BROWN)
+    );
 
     JPanel searchPanel = buildSearchPanel();
-    JPanel addPanel    = buildAddPanel();
+    JPanel addPanel = buildAddPanel();
     cardPanel.add(searchPanel, "Search");
-    cardPanel.add(addPanel,    "Add Cat");
+    cardPanel.add(addPanel, "Add Cat");
     sidebar.add(cardPanel, BorderLayout.CENTER);
 
     // Initial active state
@@ -154,8 +161,8 @@ public class GUI extends JFrame {
 
     String[] patternOptions = new String[Cat.Pattern.values().length + 1];
     patternOptions[0] = "Any";
-    for (int i = 0; i < Cat.Pattern.values().length; i++)
-      patternOptions[i + 1] = Cat.Pattern.values()[i].toString();
+    for (int i = 0; i < Cat.Pattern.values().length; i++) patternOptions[i +
+    1] = Cat.Pattern.values()[i].toString();
     searchPattern = new JComboBox<>(patternOptions);
     searchPattern.setFont(font);
     panel.add(labeledRow("Pattern:", searchPattern));
@@ -171,7 +178,9 @@ public class GUI extends JFrame {
     panel.add(labeledRow("Max Wt (oz):", tfWeightMax));
     panel.add(Box.createVerticalStrut(6));
 
-    adoptedFilter = new JComboBox<>(new String[]{"Any", "Available", "Adopted"});
+    adoptedFilter = new JComboBox<>(
+      new String[] { "Any", "Available", "Adopted" }
+    );
     adoptedFilter.setFont(font);
     panel.add(labeledRow("Adopted:", adoptedFilter));
     panel.add(Box.createVerticalStrut(6));
@@ -184,10 +193,10 @@ public class GUI extends JFrame {
     JPanel searchButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
     searchButtons.setOpaque(false);
     searchButtons.setAlignmentX(Component.LEFT_ALIGNMENT);
-    searchBtn  = makeActionButton("Search");
+    searchBtn = makeActionButton("Search");
     showAllBtn = makeActionButton("Show All");
     searchBtn.addActionListener(e -> performSearch());
-    showAllBtn.addActionListener(e -> refreshDisplay(cats.cats));
+    showAllBtn.addActionListener(e -> refreshDisplay(cats));
     searchButtons.add(searchBtn);
     searchButtons.add(showAllBtn);
     panel.add(searchButtons);
@@ -296,7 +305,7 @@ public class GUI extends JFrame {
     listPanel.add(listTitle, BorderLayout.NORTH);
 
     listModel = new DefaultListModel<>();
-    catJList  = new JList<>(listModel);
+    catJList = new JList<>(listModel);
     catJList.setFont(font);
     catJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     catJList.setBackground(new Color(0xF8, 0xF0, 0xDC));
@@ -337,7 +346,11 @@ public class GUI extends JFrame {
     btnPanel.add(adoptBtn);
     detailPanel.add(btnPanel, BorderLayout.SOUTH);
 
-    JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, listPanel, detailPanel);
+    JSplitPane split = new JSplitPane(
+      JSplitPane.HORIZONTAL_SPLIT,
+      listPanel,
+      detailPanel
+    );
     split.setDividerLocation(220);
     split.setResizeWeight(0.3);
     split.setBackground(TAN);
@@ -350,7 +363,10 @@ public class GUI extends JFrame {
 
   private void showCatDetail(Cat cat) {
     selectedCat = cat;
-    if (cat == null) { clearDetail(); return; }
+    if (cat == null) {
+      clearDetail();
+      return;
+    }
     detailArea.setText(cat.toString());
     detailArea.setCaretPosition(0);
     if (cat.adopted != null) {
@@ -374,69 +390,108 @@ public class GUI extends JFrame {
     LocalDate today = LocalDate.now();
     Month m = Month.values()[today.getMonthValue() - 1];
     selectedCat.adopted = new Date(today.getDayOfMonth(), today.getYear(), m);
+    CatData.updateAdopted(selectedCat);
     showCatDetail(selectedCat);
     catJList.repaint();
   }
 
-  private void refreshDisplay(List<Cat> list) {
+  private void refreshDisplay(CatLinkedList list) {
     listModel.clear();
     clearDetail();
-    for (Cat c : list) listModel.addElement(c);
+    Node<Cat> current = list.getHead();
+    while (current != null) {
+      listModel.addElement(current.getValue());
+      current = current.getNext();
+    }
   }
 
   private void performSearch() {
     String nameQuery = tfSearch.getText().trim();
-    String patStr    = (String) searchPattern.getSelectedItem();
+    String patStr = (String) searchPattern.getSelectedItem();
     String adoptedStr = (String) adoptedFilter.getSelectedItem();
-    Cat.Pattern pat  = "Any".equals(patStr) ? null : Cat.Pattern.valueOf(patStr);
+    Cat.Pattern pat = "Any".equals(patStr) ? null : Cat.Pattern.valueOf(patStr);
 
-    Double minW = null, maxW = null;
+    Double minW = null,
+      maxW = null;
     try {
-      if (!tfWeightMin.getText().trim().isEmpty())
-        minW = Double.parseDouble(tfWeightMin.getText().trim());
+      if (!tfWeightMin.getText().trim().isEmpty()) minW = Double.parseDouble(
+        tfWeightMin.getText().trim()
+      );
     } catch (NumberFormatException ex) {
-      JOptionPane.showMessageDialog(this, "Min weight must be a number.", "Input Error", JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(
+        this,
+        "Min weight must be a number.",
+        "Input Error",
+        JOptionPane.ERROR_MESSAGE
+      );
       return;
     }
     try {
-      if (!tfWeightMax.getText().trim().isEmpty())
-        maxW = Double.parseDouble(tfWeightMax.getText().trim());
+      if (!tfWeightMax.getText().trim().isEmpty()) maxW = Double.parseDouble(
+        tfWeightMax.getText().trim()
+      );
     } catch (NumberFormatException ex) {
-      JOptionPane.showMessageDialog(this, "Max weight must be a number.", "Input Error", JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(
+        this,
+        "Max weight must be a number.",
+        "Input Error",
+        JOptionPane.ERROR_MESSAGE
+      );
       return;
     }
 
     String dateQuery = tfDateSearch.getText().trim();
-    List<Cat> results = cats.search(
+    CatLinkedList results = cats.search(
       nameQuery.isEmpty() ? null : nameQuery,
-      pat, minW, maxW,
+      pat,
+      minW,
+      maxW,
       dateQuery.isEmpty() ? null : dateQuery
     );
 
     if ("Available".equals(adoptedStr)) {
-      List<Cat> filtered = new List<>();
-      for (Cat c : results) if (c.adopted == null) filtered.add(c);
+      CatLinkedList filtered = new CatLinkedList();
+      Node<Cat> cur = results.getHead();
+      while (cur != null) {
+        if (cur.getValue().adopted == null) filtered.add(cur.getValue());
+        cur = cur.getNext();
+      }
       results = filtered;
     } else if ("Adopted".equals(adoptedStr)) {
-      List<Cat> filtered = new List<>();
-      for (Cat c : results) if (c.adopted != null) filtered.add(c);
+      CatLinkedList filtered = new CatLinkedList();
+      Node<Cat> cur = results.getHead();
+      while (cur != null) {
+        if (cur.getValue().adopted != null) filtered.add(cur.getValue());
+        cur = cur.getNext();
+      }
       results = filtered;
     }
 
     refreshDisplay(results);
   }
 
-  private void updateBornDays() { updateDaysFor(bornMonth, bornYear, bornDay); }
-  private void updateCameDays() { updateDaysFor(cameMonth, cameYear, cameDay); }
+  private void updateBornDays() {
+    updateDaysFor(bornMonth, bornYear, bornDay);
+  }
 
-  private void updateDaysFor(JComboBox<Month> monthBox, JComboBox<Integer> yearBox, JComboBox<Integer> dayBox) {
+  private void updateCameDays() {
+    updateDaysFor(cameMonth, cameYear, cameDay);
+  }
+
+  private void updateDaysFor(
+    JComboBox<Month> monthBox,
+    JComboBox<Integer> yearBox,
+    JComboBox<Integer> dayBox
+  ) {
     Month selectedMonth = (Month) monthBox.getSelectedItem();
-    int selectedYear    = (Integer) yearBox.getSelectedItem();
-    int maxDays         = selectedMonth.getMaxDays(selectedYear);
-    Integer currentDay  = (Integer) dayBox.getSelectedItem();
+    int selectedYear = (Integer) yearBox.getSelectedItem();
+    int maxDays = selectedMonth.getMaxDays(selectedYear);
+    Integer currentDay = (Integer) dayBox.getSelectedItem();
     dayBox.removeAllItems();
     for (int i = 1; i <= maxDays; i++) dayBox.addItem(i);
-    if (currentDay != null && currentDay <= maxDays) dayBox.setSelectedItem(currentDay);
+    if (currentDay != null && currentDay <= maxDays) dayBox.setSelectedItem(
+      currentDay
+    );
   }
 
   private JLabel subHeader(String text) {
@@ -462,17 +517,32 @@ public class GUI extends JFrame {
   }
 
   private static class CatCellRenderer extends DefaultListCellRenderer {
+
     private static final Color DARK_BROWN = new Color(0x48, 0x2E, 0x1D);
-    private static final Color MED_BROWN  = new Color(0x89, 0x5D, 0x2B);
-    private static final Color CREAM      = new Color(0xF0, 0xDA, 0xAE);
+    private static final Color MED_BROWN = new Color(0x89, 0x5D, 0x2B);
+    private static final Color CREAM = new Color(0xF0, 0xDA, 0xAE);
 
     @Override
-    public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-      super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+    public Component getListCellRendererComponent(
+      JList<?> list,
+      Object value,
+      int index,
+      boolean isSelected,
+      boolean cellHasFocus
+    ) {
+      super.getListCellRendererComponent(
+        list,
+        value,
+        index,
+        isSelected,
+        cellHasFocus
+      );
       if (value instanceof Cat) {
         Cat cat = (Cat) value;
         String adoptedMark = cat.adopted != null ? " ✓" : "";
-        setText((index + 1) + ". " + cat.name + " (" + cat.pattern + ")" + adoptedMark);
+        setText(
+          (index + 1) + ". " + cat.name + " (" + cat.pattern + ")" + adoptedMark
+        );
       }
       if (isSelected) {
         setBackground(MED_BROWN);
@@ -486,28 +556,55 @@ public class GUI extends JFrame {
   }
 
   public class AddCatHandler implements ActionListener {
+
     @Override
     public void actionPerformed(ActionEvent e) {
-      String catName      = tfName.getText().trim();
+      String catName = tfName.getText().trim();
       String catWeightStr = tfWeight.getText().trim();
       if (catName.isEmpty() || catWeightStr.isEmpty()) {
-        JOptionPane.showMessageDialog(GUI.this, "Please enter a name and weight.", "Missing Fields", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(
+          GUI.this,
+          "Please enter a name and weight.",
+          "Missing Fields",
+          JOptionPane.WARNING_MESSAGE
+        );
         return;
       }
       double catWeightVal;
       try {
         catWeightVal = Double.parseDouble(catWeightStr);
       } catch (NumberFormatException ex) {
-        JOptionPane.showMessageDialog(GUI.this, "Weight must be a number.", "Invalid Weight", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(
+          GUI.this,
+          "Weight must be a number.",
+          "Invalid Weight",
+          JOptionPane.ERROR_MESSAGE
+        );
         return;
       }
 
-      Date bornDate = new Date((Integer) bornDay.getSelectedItem(), (Integer) bornYear.getSelectedItem(), (Month) bornMonth.getSelectedItem());
-      Date cameDate = new Date((Integer) cameDay.getSelectedItem(), (Integer) cameYear.getSelectedItem(), (Month) cameMonth.getSelectedItem());
-      cats.enter(new Cat(bornDate, cameDate, (Cat.Pattern) pattern.getSelectedItem(), catWeightVal, catName));
+      Date bornDate = new Date(
+        (Integer) bornDay.getSelectedItem(),
+        (Integer) bornYear.getSelectedItem(),
+        (Month) bornMonth.getSelectedItem()
+      );
+      Date cameDate = new Date(
+        (Integer) cameDay.getSelectedItem(),
+        (Integer) cameYear.getSelectedItem(),
+        (Month) cameMonth.getSelectedItem()
+      );
+      Cat newCat = new Cat(
+        bornDate,
+        cameDate,
+        (Cat.Pattern) pattern.getSelectedItem(),
+        catWeightVal,
+        catName
+      );
+      cats.enter(newCat);
+      CatData.save(newCat);
       tfName.setText("");
       tfWeight.setText("");
-      refreshDisplay(cats.cats);
+      refreshDisplay(cats);
     }
   }
 
