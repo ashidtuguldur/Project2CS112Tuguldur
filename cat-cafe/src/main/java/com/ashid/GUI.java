@@ -17,7 +17,6 @@ public class GUI extends JFrame {
   private Font headerFont;
   private Font subHeaderFont;
 
-  // Add Cat fields
   private JTextField tfName;
   private JTextField tfWeight;
   private JComboBox<Cat.Pattern> pattern;
@@ -29,7 +28,6 @@ public class GUI extends JFrame {
   private JComboBox<Integer> cameYear;
   private JButton addBtn;
 
-  // Search fields
   private JTextField tfSearch;
   private JComboBox<String> searchPattern;
   private JTextField tfWeightMin;
@@ -39,13 +37,16 @@ public class GUI extends JFrame {
   private JButton searchBtn;
   private JButton showAllBtn;
 
-  // Cat list display
   private DefaultListModel<Cat> listModel;
   private JList<Cat> catJList;
 
-  // Detail panel
   private JTextArea detailArea;
+  private JLabel photoLabel;
+  private JButton choosePhotoBtn;
+  private JTextArea notesArea;
   private JButton adoptBtn;
+  private JButton deleteBtn;
+  private JButton saveNotesBtn;
   private Cat selectedCat;
 
   private CatLinkedList cats;
@@ -58,6 +59,7 @@ public class GUI extends JFrame {
     getContentPane().setBackground(DARK_BROWN);
     cats = new CatLinkedList();
     for (Cat c : ls) cats.add(c);
+    cats.sort();
 
     font = new Font("Times", Font.PLAIN, 16);
     headerFont = new Font("Times", Font.BOLD, 18);
@@ -96,7 +98,6 @@ public class GUI extends JFrame {
     tabRow.add(addTabBtn);
     sidebar.add(tabRow, BorderLayout.NORTH);
 
-    // Content area with CardLayout
     CardLayout cards = new CardLayout();
     JPanel cardPanel = new JPanel(cards);
     cardPanel.setBackground(CREAM);
@@ -110,7 +111,6 @@ public class GUI extends JFrame {
     cardPanel.add(addPanel, "Add Cat");
     sidebar.add(cardPanel, BorderLayout.CENTER);
 
-    // Initial active state
     styleTabActive(searchTabBtn);
     styleTabInactive(addTabBtn);
 
@@ -240,7 +240,7 @@ public class GUI extends JFrame {
     panel.add(Box.createVerticalStrut(4));
 
     Integer[] years = new Integer[51];
-    for (int i = 0; i < 51; i++) years[i] = 1980 + i;
+    for (int i = 0; i < 51; i++) years[i] = 2000 + i;
     bornYear = new JComboBox<>(years);
     bornYear.setFont(font);
     panel.add(labeledRow("Year:", bornYear));
@@ -328,6 +328,34 @@ public class GUI extends JFrame {
     detailTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
     detailPanel.add(detailTitle, BorderLayout.NORTH);
 
+    JPanel centerContent = new JPanel();
+    centerContent.setLayout(new BoxLayout(centerContent, BoxLayout.Y_AXIS));
+    centerContent.setBackground(CREAM);
+
+    photoLabel = new JLabel("(no photo)", SwingConstants.CENTER);
+    photoLabel.setFont(font);
+    photoLabel.setForeground(TAN);
+    photoLabel.setOpaque(true);
+    photoLabel.setBackground(new Color(0xE8, 0xD8, 0xB0));
+    photoLabel.setBorder(BorderFactory.createLineBorder(TAN));
+    photoLabel.setPreferredSize(new Dimension(300, 200));
+    photoLabel.setMaximumSize(new Dimension(300, 200));
+    photoLabel.setMinimumSize(new Dimension(300, 200));
+    JPanel photoWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+    photoWrapper.setOpaque(false);
+    photoWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+    photoWrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
+    photoWrapper.add(photoLabel);
+    centerContent.add(photoWrapper);
+    centerContent.add(Box.createVerticalStrut(6));
+
+    choosePhotoBtn = makeActionButton("Choose Photo");
+    choosePhotoBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+    choosePhotoBtn.setEnabled(false);
+    choosePhotoBtn.addActionListener(e -> choosePhoto());
+    centerContent.add(choosePhotoBtn);
+    centerContent.add(Box.createVerticalStrut(8));
+
     detailArea = new JTextArea();
     detailArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
     detailArea.setEditable(false);
@@ -335,15 +363,57 @@ public class GUI extends JFrame {
     detailArea.setForeground(DARK_BROWN);
     detailArea.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
     detailArea.setText("(select a cat from the list)");
-    detailPanel.add(new JScrollPane(detailArea), BorderLayout.CENTER);
+    JScrollPane infoScroll = new JScrollPane(detailArea);
+    infoScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
+    infoScroll.setPreferredSize(new Dimension(300, 155));
+    infoScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 155));
+    centerContent.add(infoScroll);
+    centerContent.add(Box.createVerticalStrut(8));
+
+    JLabel notesLabel = new JLabel("Notes:");
+    notesLabel.setFont(font);
+    notesLabel.setForeground(DARK_BROWN);
+    notesLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+    centerContent.add(notesLabel);
+    centerContent.add(Box.createVerticalStrut(4));
+
+    notesArea = new JTextArea(4, 0);
+    notesArea.setFont(font);
+    notesArea.setLineWrap(true);
+    notesArea.setWrapStyleWord(true);
+    notesArea.setEnabled(false);
+    notesArea.setBackground(new Color(0xF8, 0xF0, 0xDC));
+    notesArea.setForeground(DARK_BROWN);
+    notesArea.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+    JScrollPane notesScroll = new JScrollPane(notesArea);
+    notesScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
+    notesScroll.setPreferredSize(new Dimension(300, 100));
+    notesScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+    centerContent.add(notesScroll);
+
+    detailPanel.add(centerContent, BorderLayout.CENTER);
 
     adoptBtn = makeActionButton("Adopt");
     adoptBtn.setFont(headerFont);
     adoptBtn.setEnabled(false);
     adoptBtn.addActionListener(e -> adoptSelectedCat());
+
+    deleteBtn = makeActionButton("Delete");
+    deleteBtn.setFont(headerFont);
+    deleteBtn.setBackground(RUSSET);
+    deleteBtn.setEnabled(false);
+    deleteBtn.addActionListener(e -> deleteSelectedCat());
+
+    saveNotesBtn = makeActionButton("Save Notes");
+    saveNotesBtn.setFont(headerFont);
+    saveNotesBtn.setEnabled(false);
+    saveNotesBtn.addActionListener(e -> saveNotes());
+
     JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
     btnPanel.setBackground(CREAM);
     btnPanel.add(adoptBtn);
+    btnPanel.add(deleteBtn);
+    btnPanel.add(saveNotesBtn);
     detailPanel.add(btnPanel, BorderLayout.SOUTH);
 
     JSplitPane split = new JSplitPane(
@@ -369,6 +439,11 @@ public class GUI extends JFrame {
     }
     detailArea.setText(cat.toString());
     detailArea.setCaretPosition(0);
+    loadPhoto(cat);
+    notesArea.setText(cat.notes != null ? cat.notes : "");
+    notesArea.setEnabled(true);
+    choosePhotoBtn.setEnabled(true);
+    saveNotesBtn.setEnabled(true);
     if (cat.adopted != null) {
       adoptBtn.setText("Already Adopted");
       adoptBtn.setEnabled(false);
@@ -376,13 +451,21 @@ public class GUI extends JFrame {
       adoptBtn.setText("Adopt");
       adoptBtn.setEnabled(true);
     }
+    deleteBtn.setEnabled(true);
   }
 
   private void clearDetail() {
     selectedCat = null;
     detailArea.setText("(select a cat from the list)");
+    photoLabel.setIcon(null);
+    photoLabel.setText("(no photo)");
+    notesArea.setText("");
+    notesArea.setEnabled(false);
+    choosePhotoBtn.setEnabled(false);
+    saveNotesBtn.setEnabled(false);
     adoptBtn.setEnabled(false);
     adoptBtn.setText("Adopt");
+    deleteBtn.setEnabled(false);
   }
 
   private void adoptSelectedCat() {
@@ -395,13 +478,69 @@ public class GUI extends JFrame {
     catJList.repaint();
   }
 
+  private void deleteSelectedCat() {
+    if (selectedCat == null) return;
+    int confirm = JOptionPane.showConfirmDialog(
+      this,
+      "Delete " + selectedCat.name + "?",
+      "Confirm Delete",
+      JOptionPane.YES_NO_OPTION
+    );
+    if (confirm != JOptionPane.YES_OPTION) return;
+    cats.delete(selectedCat);
+    CatData.delete(selectedCat);
+    refreshDisplay(cats);
+  }
+
+  private void loadPhoto(Cat cat) {
+    if (cat.photoPath != null && !cat.photoPath.isEmpty()) {
+      try {
+        String fullPath = CatData.resolvePhotoPath(cat.photoPath);
+        ImageIcon raw = new ImageIcon(fullPath);
+        Image scaled = raw.getImage().getScaledInstance(300, 200, Image.SCALE_SMOOTH);
+        photoLabel.setIcon(new ImageIcon(scaled));
+        photoLabel.setText(null);
+      } catch (Exception ex) {
+        photoLabel.setIcon(null);
+        photoLabel.setText("(photo not found)");
+      }
+    } else {
+      photoLabel.setIcon(null);
+      photoLabel.setText("(no photo)");
+    }
+  }
+
+  private void choosePhoto() {
+    if (selectedCat == null) return;
+    JFileChooser fc = new JFileChooser();
+    fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+      "Image files", "jpg", "jpeg", "png", "gif", "bmp"));
+    if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+      try {
+        String relative = CatData.copyPhoto(
+          fc.getSelectedFile().getAbsolutePath(), selectedCat.name);
+        selectedCat.photoPath = relative;
+        CatData.updatePhoto(selectedCat);
+        loadPhoto(selectedCat);
+      } catch (java.io.IOException ex) {
+        JOptionPane.showMessageDialog(this,
+          "Could not copy photo: " + ex.getMessage(),
+          "Error", JOptionPane.ERROR_MESSAGE);
+      }
+    }
+  }
+
+  private void saveNotes() {
+    if (selectedCat == null) return;
+    selectedCat.notes = notesArea.getText();
+    CatData.updateNotes(selectedCat);
+  }
+
   private void refreshDisplay(CatLinkedList list) {
     listModel.clear();
     clearDetail();
-    Node<Cat> current = list.getHead();
-    while (current != null) {
-      listModel.addElement(current.getValue());
-      current = current.getNext();
+    for (Cat cat : list) {
+      listModel.addElement(cat);
     }
   }
 
@@ -451,18 +590,14 @@ public class GUI extends JFrame {
 
     if ("Available".equals(adoptedStr)) {
       CatLinkedList filtered = new CatLinkedList();
-      Node<Cat> cur = results.getHead();
-      while (cur != null) {
-        if (cur.getValue().adopted == null) filtered.add(cur.getValue());
-        cur = cur.getNext();
+      for (Cat cat : results) {
+        if (cat.adopted == null) filtered.add(cat);
       }
       results = filtered;
     } else if ("Adopted".equals(adoptedStr)) {
       CatLinkedList filtered = new CatLinkedList();
-      Node<Cat> cur = results.getHead();
-      while (cur != null) {
-        if (cur.getValue().adopted != null) filtered.add(cur.getValue());
-        cur = cur.getNext();
+      for (Cat cat : results) {
+        if (cat.adopted != null) filtered.add(cat);
       }
       results = filtered;
     }
@@ -601,6 +736,7 @@ public class GUI extends JFrame {
         catName
       );
       cats.enter(newCat);
+      cats.sort();
       CatData.save(newCat);
       tfName.setText("");
       tfWeight.setText("");

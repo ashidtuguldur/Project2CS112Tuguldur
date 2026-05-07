@@ -1,12 +1,18 @@
 package com.ashid;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
 import java.sql.*;
 
 public class CatData {
 
-  private static final String DB_URL = "jdbc:sqlite:src/main/resources/cats.db";
+  private static final String DB_DIR = System.getProperty("user.home") + "/cat-cafe";
+  private static final String PHOTOS_DIR = DB_DIR + "/photos";
+  private static final String DB_URL = "jdbc:sqlite:" + DB_DIR + "/cats.db";
 
   public static List<Cat> load() {
+    new File(DB_DIR).mkdirs();
     try (Connection conn = DriverManager.getConnection(DB_URL)) {
       initDB(conn);
       List<Cat> ls = new List<>();
@@ -40,6 +46,8 @@ public class CatData {
               Month.valueOf(adoptedMonth)
             );
           }
+          cat.photoPath = rs.getString("photo_path");
+          cat.notes = rs.getString("notes");
           ls.add(cat);
         }
       }
@@ -65,10 +73,14 @@ public class CatData {
                 weight REAL NOT NULL,
                 adopted_day INTEGER,
                 adopted_month TEXT,
-                adopted_year INTEGER
+                adopted_year INTEGER,
+                photo_path TEXT,
+                notes TEXT
             )
         """
       );
+      try { stmt.execute("ALTER TABLE cats ADD COLUMN photo_path TEXT"); } catch (SQLException ignored) {}
+      try { stmt.execute("ALTER TABLE cats ADD COLUMN notes TEXT"); } catch (SQLException ignored) {}
       try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM cats")) {
         if (rs.next() && rs.getInt(1) > 0) return;
       }
@@ -294,6 +306,17 @@ public class CatData {
     }
   }
 
+  public static void delete(Cat cat) {
+    try (Connection conn = DriverManager.getConnection(DB_URL)) {
+      try (PreparedStatement ps = conn.prepareStatement("DELETE FROM cats WHERE name=?")) {
+        ps.setString(1, cat.name);
+        ps.executeUpdate();
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to delete cat", e);
+    }
+  }
+
   public static void updateAdopted(Cat cat) {
     try (Connection conn = DriverManager.getConnection(DB_URL)) {
       String sql = "UPDATE cats SET adopted_day=?, adopted_month=?, adopted_year=? WHERE name=?";
@@ -313,6 +336,47 @@ public class CatData {
     } catch (SQLException e) {
       throw new RuntimeException("Failed to update adopted date", e);
     }
+  }
+
+  public static void updatePhoto(Cat cat) {
+    try (Connection conn = DriverManager.getConnection(DB_URL)) {
+      try (PreparedStatement ps = conn.prepareStatement("UPDATE cats SET photo_path=? WHERE name=?")) {
+        if (cat.photoPath != null) ps.setString(1, cat.photoPath);
+        else ps.setNull(1, Types.VARCHAR);
+        ps.setString(2, cat.name);
+        ps.executeUpdate();
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to update photo", e);
+    }
+  }
+
+  public static void updateNotes(Cat cat) {
+    try (Connection conn = DriverManager.getConnection(DB_URL)) {
+      try (PreparedStatement ps = conn.prepareStatement("UPDATE cats SET notes=? WHERE name=?")) {
+        if (cat.notes != null) ps.setString(1, cat.notes);
+        else ps.setNull(1, Types.VARCHAR);
+        ps.setString(2, cat.name);
+        ps.executeUpdate();
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to update notes", e);
+    }
+  }
+
+  public static String copyPhoto(String sourcePath, String catName) throws IOException {
+    new File(PHOTOS_DIR).mkdirs();
+    String ext = sourcePath.substring(sourcePath.lastIndexOf('.'));
+    String fileName = catName.replaceAll("[^a-zA-Z0-9_-]", "_") + ext;
+    Path dest = Paths.get(PHOTOS_DIR, fileName);
+    Files.copy(Paths.get(sourcePath), dest, StandardCopyOption.REPLACE_EXISTING);
+    return "photos/" + fileName;
+  }
+
+  public static String resolvePhotoPath(String relativePath) {
+    if (relativePath == null) return null;
+    if (Paths.get(relativePath).isAbsolute()) return relativePath;
+    return DB_DIR + "/" + relativePath;
   }
 
   private static void insert(

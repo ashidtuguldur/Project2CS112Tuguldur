@@ -10,6 +10,8 @@ public final class Cat implements Comparable<Cat> {
   public final Pattern pattern;
   public Double weight;
   public final String name;
+  public String photoPath;
+  public String notes;
 
   public Cat(
     Date born,

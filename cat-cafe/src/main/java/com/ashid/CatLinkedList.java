@@ -1,13 +1,33 @@
 package com.ashid;
 
-public class CatLinkedList {
+import java.util.Iterator;
+
+public class CatLinkedList implements Iterable<Cat> {
 
   private Node<Cat> head;
   private Node<Cat> tail;
+  private int modCount = 0;
 
   public CatLinkedList() {
     this.head = null;
     this.tail = null;
+  }
+
+  public Cat get(int index) {
+    if (index < 0) throw new IndexOutOfBoundsException(
+      "Index " + index + " is out of bounds"
+    );
+    Node<Cat> current = head;
+    for (int i = 0; i < index; i++) {
+      if (current == null) throw new IndexOutOfBoundsException(
+        "Index " + index + " is out of bounds"
+      );
+      current = current.getNext();
+    }
+    if (current == null) throw new IndexOutOfBoundsException(
+      "Index " + index + " is out of bounds"
+    );
+    return current.getValue();
   }
 
   public Node<Cat> getHead() {
@@ -27,6 +47,7 @@ public class CatLinkedList {
       tail.setNext(newNode);
       tail = newNode;
     }
+    modCount++;
   }
 
   public void insert(Cat value, int index) {
@@ -38,6 +59,7 @@ public class CatLinkedList {
       newNode.setNext(head);
       head = newNode;
       if (tail == null) tail = newNode;
+      modCount++;
       return;
     }
     Node<Cat> current = head;
@@ -50,13 +72,12 @@ public class CatLinkedList {
     newNode.setNext(current.getNext());
     current.setNext(newNode);
     if (newNode.getNext() == null) tail = newNode;
+    modCount++;
   }
 
   public boolean contains(Cat value) {
-    Node<Cat> current = head;
-    while (current != null) {
-      if (current.getValue().equals(value)) return true;
-      current = current.getNext();
+    for (Cat cat : this) {
+      if (cat.equals(value)) return true;
     }
     return false;
   }
@@ -69,6 +90,7 @@ public class CatLinkedList {
         if (previous == null) head = current.getNext();
         else previous.setNext(current.getNext());
         if (current == tail) tail = previous;
+        modCount++;
         return;
       }
       previous = current;
@@ -92,15 +114,13 @@ public class CatLinkedList {
     if (previous == null) head = current.getNext();
     else previous.setNext(current.getNext());
     if (current == tail) tail = previous;
+    modCount++;
   }
 
+  @SuppressWarnings("unused")
   public int size() {
     int count = 0;
-    Node<Cat> current = head;
-    while (current != null) {
-      count++;
-      current = current.getNext();
-    }
+    for (Cat cat : this) count++;
     return count;
   }
 
@@ -119,6 +139,7 @@ public class CatLinkedList {
         if (previous == null) head = current.getNext();
         else previous.setNext(current.getNext());
         if (current.getNext() == null) tail = previous;
+        modCount++;
         return c;
       }
       previous = current;
@@ -136,6 +157,7 @@ public class CatLinkedList {
         if (previous == null) head = current.getNext();
         else previous.setNext(current.getNext());
         if (current.getNext() == null) tail = previous;
+        modCount++;
         return c;
       }
       previous = current;
@@ -152,10 +174,7 @@ public class CatLinkedList {
     String dateQuery
   ) {
     CatLinkedList results = new CatLinkedList();
-    Node<Cat> current = head;
-    while (current != null) {
-      Cat c = current.getValue();
-      current = current.getNext();
+    for (Cat c : this) {
       if (
         name != null && !c.name.toLowerCase().contains(name.toLowerCase())
       ) continue;
@@ -181,12 +200,40 @@ public class CatLinkedList {
       return;
     }
     int i = 1;
-    Node<Cat> current = head;
-    while (current != null) {
+    for (Cat cat : this) {
       System.out.println("--- Cat #" + i++ + " ---");
-      System.out.println(current.getValue());
+      System.out.println(cat);
       System.out.println();
-      current = current.getNext();
     }
+  }
+
+  public void sort() {
+    if (head == null || head.getNext() == null) return;
+    CatLinkedList sorted = new CatLinkedList();
+    for (Cat cat : this) {
+      Node<Cat> cur = sorted.head;
+      Node<Cat> prev = null;
+      while (cur != null && cur.getValue().compareTo(cat) <= 0) {
+        prev = cur;
+        cur = cur.getNext();
+      }
+      Node<Cat> newNode = new Node<>(cat);
+      newNode.setNext(cur);
+      if (prev == null) sorted.head = newNode;
+      else prev.setNext(newNode);
+      if (cur == null) sorted.tail = newNode;
+    }
+    this.head = sorted.head;
+    this.tail = sorted.tail;
+    modCount++;
+  }
+
+  public int getModCount() {
+    return modCount;
+  }
+
+  @Override
+  public Iterator<Cat> iterator() {
+    return new CatLinkedListIterator(this);
   }
 }
