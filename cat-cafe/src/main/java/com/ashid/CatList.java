@@ -11,15 +11,12 @@ public class CatList {
   }
 
   public void enter(Cat newCat) {
-    //check for duplicates there should be no duplicates.
     if (!cats.contains(newCat)) {
       cats.add(newCat);
     }
   }
 
   public Cat delete(String name) {
-    //use the best practice
-    //use iterator
     Iterator<Cat> it = cats.iterator();
     while (it.hasNext()) {
       Cat c = it.next();
@@ -32,8 +29,6 @@ public class CatList {
   }
 
   public Cat delete(Cat cat) {
-    //use the best practice
-    //use iterator
     Iterator<Cat> it = cats.iterator();
     while (it.hasNext()) {
       Cat c = it.next();
@@ -74,7 +69,7 @@ public class CatList {
   }
 
   public void display() {
-    if (cats.iterator().hasNext() == false) {
+    if (!cats.iterator().hasNext()) {
       System.out.println("(no cats in list)");
       return;
     }

@@ -1,5 +1,6 @@
 package com.ashid;
 
+import java.util.Comparator;
 import java.util.Iterator;
 
 public class CatLinkedList implements Iterable<Cat> {
@@ -82,41 +83,6 @@ public class CatLinkedList implements Iterable<Cat> {
     return false;
   }
 
-  public void remove(Cat value) {
-    Node<Cat> current = head;
-    Node<Cat> previous = null;
-    while (current != null) {
-      if (current.getValue().equals(value)) {
-        if (previous == null) head = current.getNext();
-        else previous.setNext(current.getNext());
-        if (current == tail) tail = previous;
-        modCount++;
-        return;
-      }
-      previous = current;
-      current = current.getNext();
-    }
-  }
-
-  public void remove(int index) {
-    if (index < 0) throw new IllegalArgumentException(
-      "Index must be non-negative"
-    );
-    Node<Cat> current = head;
-    Node<Cat> previous = null;
-    for (int i = 0; i < index; i++) {
-      if (current == null) throw new IndexOutOfBoundsException(
-        "Index " + index + " is out of bounds"
-      );
-      previous = current;
-      current = current.getNext();
-    }
-    if (previous == null) head = current.getNext();
-    else previous.setNext(current.getNext());
-    if (current == tail) tail = previous;
-    modCount++;
-  }
-
   @SuppressWarnings("unused")
   public int size() {
     int count = 0;
@@ -131,39 +97,34 @@ public class CatLinkedList implements Iterable<Cat> {
   }
 
   public Cat delete(String name) {
-    Node<Cat> current = head;
-    Node<Cat> previous = null;
-    while (current != null) {
-      Cat c = current.getValue();
+    Iterator<Cat> it = iterator();
+    while (it.hasNext()) {
+      Cat c = it.next();
       if (c.name.equalsIgnoreCase(name)) {
-        if (previous == null) head = current.getNext();
-        else previous.setNext(current.getNext());
-        if (current.getNext() == null) tail = previous;
-        modCount++;
+        it.remove();
         return c;
       }
-      previous = current;
-      current = current.getNext();
     }
     return null;
   }
 
   public Cat delete(Cat cat) {
-    Node<Cat> current = head;
-    Node<Cat> previous = null;
-    while (current != null) {
-      Cat c = current.getValue();
+    Iterator<Cat> it = iterator();
+    while (it.hasNext()) {
+      Cat c = it.next();
       if (c.equals(cat)) {
-        if (previous == null) head = current.getNext();
-        else previous.setNext(current.getNext());
-        if (current.getNext() == null) tail = previous;
-        modCount++;
+        it.remove();
         return c;
       }
-      previous = current;
-      current = current.getNext();
     }
     return null;
+  }
+
+  void removeNode(Node<Cat> prev, Node<Cat> node) {
+    if (prev == null) head = node.getNext();
+    else prev.setNext(node.getNext());
+    if (node == tail) tail = prev;
+    modCount++;
   }
 
   public CatLinkedList search(
@@ -201,31 +162,64 @@ public class CatLinkedList implements Iterable<Cat> {
     }
     int i = 1;
     for (Cat cat : this) {
-      System.out.println("--- Cat #" + i++ + " ---");
+      System.out.println("Cat #" + i++);
       System.out.println(cat);
       System.out.println();
     }
   }
 
   public void sort() {
+    sort(Cat::compareTo);
+  }
+
+  public void sort(Comparator<Cat> comparator) {
     if (head == null || head.getNext() == null) return;
-    CatLinkedList sorted = new CatLinkedList();
-    for (Cat cat : this) {
-      Node<Cat> cur = sorted.head;
-      Node<Cat> prev = null;
-      while (cur != null && cur.getValue().compareTo(cat) <= 0) {
-        prev = cur;
-        cur = cur.getNext();
-      }
-      Node<Cat> newNode = new Node<>(cat);
-      newNode.setNext(cur);
-      if (prev == null) sorted.head = newNode;
-      else prev.setNext(newNode);
-      if (cur == null) sorted.tail = newNode;
-    }
-    this.head = sorted.head;
-    this.tail = sorted.tail;
+    head = mergeSort(head, comparator);
+    Node<Cat> t = head;
+    while (t.getNext() != null) t = t.getNext();
+    tail = t;
     modCount++;
+  }
+
+  private Node<Cat> mergeSort(Node<Cat> node, Comparator<Cat> comparator) {
+    if (node == null || node.getNext() == null) return node;
+    Node<Cat> mid = getMid(node);
+    Node<Cat> second = mid.getNext();
+    mid.setNext(null);
+    Node<Cat> left = mergeSort(node, comparator);
+    Node<Cat> right = mergeSort(second, comparator);
+    return merge(left, right, comparator);
+  }
+
+  private Node<Cat> getMid(Node<Cat> node) {
+    Node<Cat> slow = node;
+    Node<Cat> fast = node.getNext();
+    while (fast != null && fast.getNext() != null) {
+      slow = slow.getNext();
+      fast = fast.getNext().getNext();
+    }
+    return slow;
+  }
+
+  private Node<Cat> merge(
+    Node<Cat> a,
+    Node<Cat> b,
+    Comparator<Cat> comparator
+  ) {
+    Node<Cat> dummy = new Node<>(null);
+    Node<Cat> cur = dummy;
+    while (a != null && b != null) {
+      if (comparator.compare(a.getValue(), b.getValue()) <= 0) {
+        cur.setNext(a);
+        a = a.getNext();
+      } else {
+        cur.setNext(b);
+        b = b.getNext();
+      }
+      cur = cur.getNext();
+    }
+    cur.setNext(a != null ? a : b);
+    return dummy.getNext();
   }
 
   public int getModCount() {

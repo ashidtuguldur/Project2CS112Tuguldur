@@ -1,4 +1,3 @@
-# Maven
 target/
 pom.xml.tag
 pom.xml.releaseBackup
@@ -10,7 +9,6 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-# IDE
 .idea/
 *.iws
 *.iml
@@ -21,24 +19,22 @@ buildNumber.properties
 .factorypath
 .sonar-ide.properties
 
-# Eclipse
 bin/
 .metadata/
 
-# NetBeans
 nb-configuration.xml
 nbactions.xml
 
-# VS Code
 .vscode/
 
-# OS
 .DS_Store
 Thumbs.db
 
-# serialized
 *.ser
 
-# environment
 .env
 .env.local
+
+# local database and uploaded photos (runtime data)
+/src/main/resources/cats.db
+/src/main/resources/photos/

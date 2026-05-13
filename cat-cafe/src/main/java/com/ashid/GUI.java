@@ -50,6 +50,10 @@ public class GUI extends JFrame {
   private Cat selectedCat;
 
   private CatLinkedList cats;
+  private CatLinkedList displayedCats;
+  private JComboBox<CatComparator.By> sortByBox;
+  private JButton sortOrderBtn;
+  private boolean sortDescending = false;
 
   public GUI(List<Cat> ls) {
     super("Cat Cafe Data Base");
@@ -59,7 +63,6 @@ public class GUI extends JFrame {
     getContentPane().setBackground(DARK_BROWN);
     cats = new CatLinkedList();
     for (Cat c : ls) cats.add(c);
-    cats.sort();
 
     font = new Font("Times", Font.PLAIN, 16);
     headerFont = new Font("Times", Font.BOLD, 18);
@@ -70,17 +73,12 @@ public class GUI extends JFrame {
     getContentPane().add(sidebar, BorderLayout.WEST);
     getContentPane().add(buildMainPanel(), BorderLayout.CENTER);
 
+    cats.sort(currentComparator());
     refreshDisplay(cats);
     setVisible(true);
     getRootPane().setDefaultButton(addBtn);
 
-    addWindowListener(
-      new WindowAdapter() {
-        public void windowClosing(WindowEvent e) {
-          System.exit(0);
-        }
-      }
-    );
+    addWindowListener(new CloseHandler());
   }
 
   private JPanel buildSidebar() {
@@ -196,10 +194,51 @@ public class GUI extends JFrame {
     searchBtn = makeActionButton("Search");
     showAllBtn = makeActionButton("Show All");
     searchBtn.addActionListener(e -> performSearch());
-    showAllBtn.addActionListener(e -> refreshDisplay(cats));
+    showAllBtn.addActionListener(e -> {
+      cats.sort(currentComparator());
+      refreshDisplay(cats);
+    });
     searchButtons.add(searchBtn);
     searchButtons.add(showAllBtn);
     panel.add(searchButtons);
+    panel.add(Box.createVerticalStrut(10));
+
+    panel.add(subHeader("── Sort ──"));
+    panel.add(Box.createVerticalStrut(4));
+
+    sortByBox = new JComboBox<>(CatComparator.By.values());
+    sortByBox.setFont(font);
+    panel.add(labeledRow("Sort by:", sortByBox));
+    panel.add(Box.createVerticalStrut(4));
+
+    sortOrderBtn = makeActionButton("↑ Asc");
+    panel.add(labeledRow("Order:", sortOrderBtn));
+    panel.add(Box.createVerticalStrut(6));
+
+    sortByBox.addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED) applyCurrentSort();
+    });
+    sortOrderBtn.addActionListener(e -> {
+      sortDescending = !sortDescending;
+      sortOrderBtn.setText(sortDescending ? "↓ Desc" : "↑ Asc");
+      applyCurrentSort();
+    });
+
+    JButton defaultSortBtn = makeActionButton("Default Sort");
+    defaultSortBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+    defaultSortBtn.addActionListener(e -> {
+      sortByBox.setSelectedIndex(0);
+      sortDescending = false;
+      sortOrderBtn.setText("↑ Asc");
+      if (displayedCats == null) return;
+      Cat prev = selectedCat;
+      displayedCats.sort();
+      listModel.clear();
+      for (Cat cat : displayedCats) listModel.addElement(cat);
+      if (prev != null) catJList.setSelectedValue(prev, true);
+    });
+    panel.add(Box.createVerticalStrut(4));
+    panel.add(defaultSortBtn);
 
     panel.add(Box.createVerticalGlue());
     return panel;
@@ -388,7 +427,9 @@ public class GUI extends JFrame {
     JScrollPane notesScroll = new JScrollPane(notesArea);
     notesScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
     notesScroll.setPreferredSize(new Dimension(300, 100));
-    notesScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+    notesScroll.setMaximumSize(
+      new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE)
+    );
     centerContent.add(notesScroll);
 
     detailPanel.add(centerContent, BorderLayout.CENTER);
@@ -497,7 +538,9 @@ public class GUI extends JFrame {
       try {
         String fullPath = CatData.resolvePhotoPath(cat.photoPath);
         ImageIcon raw = new ImageIcon(fullPath);
-        Image scaled = raw.getImage().getScaledInstance(300, 200, Image.SCALE_SMOOTH);
+        Image scaled = raw
+          .getImage()
+          .getScaledInstance(300, 200, Image.SCALE_SMOOTH);
         photoLabel.setIcon(new ImageIcon(scaled));
         photoLabel.setText(null);
       } catch (Exception ex) {
@@ -513,19 +556,32 @@ public class GUI extends JFrame {
   private void choosePhoto() {
     if (selectedCat == null) return;
     JFileChooser fc = new JFileChooser();
-    fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-      "Image files", "jpg", "jpeg", "png", "gif", "bmp"));
+    fc.setFileFilter(
+      new javax.swing.filechooser.FileNameExtensionFilter(
+        "Image files",
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "bmp"
+      )
+    );
     if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
       try {
         String relative = CatData.copyPhoto(
-          fc.getSelectedFile().getAbsolutePath(), selectedCat.name);
+          fc.getSelectedFile().getAbsolutePath(),
+          selectedCat.name
+        );
         selectedCat.photoPath = relative;
         CatData.updatePhoto(selectedCat);
         loadPhoto(selectedCat);
       } catch (java.io.IOException ex) {
-        JOptionPane.showMessageDialog(this,
+        JOptionPane.showMessageDialog(
+          this,
           "Could not copy photo: " + ex.getMessage(),
-          "Error", JOptionPane.ERROR_MESSAGE);
+          "Error",
+          JOptionPane.ERROR_MESSAGE
+        );
       }
     }
   }
@@ -537,6 +593,7 @@ public class GUI extends JFrame {
   }
 
   private void refreshDisplay(CatLinkedList list) {
+    displayedCats = list;
     listModel.clear();
     clearDetail();
     for (Cat cat : list) {
@@ -602,7 +659,25 @@ public class GUI extends JFrame {
       results = filtered;
     }
 
+    results.sort(currentComparator());
     refreshDisplay(results);
+  }
+
+  private CatComparator currentComparator() {
+    CatComparator.By by =
+      sortByBox != null
+        ? (CatComparator.By) sortByBox.getSelectedItem()
+        : CatComparator.By.NAME;
+    return new CatComparator(by, sortDescending);
+  }
+
+  private void applyCurrentSort() {
+    if (displayedCats == null) return;
+    Cat prev = selectedCat;
+    displayedCats.sort(currentComparator());
+    listModel.clear();
+    for (Cat cat : displayedCats) listModel.addElement(cat);
+    if (prev != null) catJList.setSelectedValue(prev, true);
   }
 
   private void updateBornDays() {
@@ -690,6 +765,14 @@ public class GUI extends JFrame {
     }
   }
 
+  private class CloseHandler extends WindowAdapter {
+
+    @Override
+    public void windowClosing(WindowEvent e) {
+      System.exit(0);
+    }
+  }
+
   public class AddCatHandler implements ActionListener {
 
     @Override
@@ -736,7 +819,7 @@ public class GUI extends JFrame {
         catName
       );
       cats.enter(newCat);
-      cats.sort();
+      cats.sort(currentComparator());
       CatData.save(newCat);
       tfName.setText("");
       tfWeight.setText("");
