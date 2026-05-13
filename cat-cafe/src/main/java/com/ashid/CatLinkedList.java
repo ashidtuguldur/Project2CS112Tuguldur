@@ -188,7 +188,7 @@ public class CatLinkedList implements Iterable<Cat> {
   }
 
   public void sort() {
-    sort(Cat::compareTo);
+    sort((a, b) -> a.compareTo(b));
   }
 
   public void sort(Comparator<Cat> comparator) {
