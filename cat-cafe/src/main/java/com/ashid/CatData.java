@@ -166,8 +166,11 @@ public class CatData {
           "UPDATE cats SET photo_path=? WHERE name=?"
         )
       ) {
-        if (cat.photoPath != null) ps.setString(1, cat.photoPath);
-        else ps.setNull(1, Types.VARCHAR);
+        if (cat.photoPath != null) {
+          ps.setString(1, cat.photoPath);
+        } else {
+          ps.setNull(1, Types.VARCHAR);
+        }
         ps.setString(2, cat.name);
         ps.executeUpdate();
       }
@@ -183,8 +186,11 @@ public class CatData {
           "UPDATE cats SET notes=? WHERE name=?"
         )
       ) {
-        if (cat.notes != null) ps.setString(1, cat.notes);
-        else ps.setNull(1, Types.VARCHAR);
+        if (cat.notes != null) {
+          ps.setString(1, cat.notes);
+        } else {
+          ps.setNull(1, Types.VARCHAR);
+        }
         ps.setString(2, cat.name);
         ps.executeUpdate();
       }
@@ -208,8 +214,12 @@ public class CatData {
   }
 
   public static String resolvePhotoPath(String relativePath) {
-    if (relativePath == null) return null;
-    if (Paths.get(relativePath).isAbsolute()) return relativePath;
+    if (relativePath == null) {
+      return null;
+    }
+    if (Paths.get(relativePath).isAbsolute()) {
+      return relativePath;
+    }
     return DB_DIR + "/" + relativePath;
   }
 

@@ -45,8 +45,12 @@ public final class Date implements Comparable<Date> {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (!(obj instanceof Date)) return false;
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof Date)) {
+      return false;
+    }
     Date other = (Date) obj;
     return (
       this.year == other.year &&
@@ -57,11 +61,12 @@ public final class Date implements Comparable<Date> {
 
   @Override
   public int compareTo(Date other) {
-    if (this.year != other.year) return Integer.compare(this.year, other.year);
-    if (this.month != other.month) return Integer.compare(
-      this.month.ordinal(),
-      other.month.ordinal()
-    );
+    if (this.year != other.year) {
+      return Integer.compare(this.year, other.year);
+    }
+    if (this.month != other.month) {
+      return Integer.compare(this.month.ordinal(), other.month.ordinal());
+    }
     return Integer.compare(this.date, other.date);
   }
 

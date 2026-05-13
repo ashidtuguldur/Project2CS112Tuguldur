@@ -85,7 +85,6 @@ public class GUI extends JFrame {
     JPanel sidebar = new JPanel(new BorderLayout());
     sidebar.setBackground(DARK_BROWN);
 
-    // Tab button row — sits above the content box, no border overlap
     JPanel tabRow = new JPanel(new GridLayout(1, 2, 3, 0));
     tabRow.setBackground(DARK_BROWN);
     tabRow.setBorder(BorderFactory.createEmptyBorder(6, 6, 0, 6));
@@ -351,7 +350,9 @@ public class GUI extends JFrame {
     catJList.setForeground(DARK_BROWN);
     catJList.setCellRenderer(new CatCellRenderer());
     catJList.addListSelectionListener(e -> {
-      if (!e.getValueIsAdjusting()) showCatDetail(catJList.getSelectedValue());
+      if (!e.getValueIsAdjusting()) {
+        showCatDetail(catJList.getSelectedValue());
+      }
     });
     JScrollPane listScroll = new JScrollPane(catJList);
     listScroll.getViewport().setBackground(new Color(0xF8, 0xF0, 0xDC));
@@ -527,7 +528,9 @@ public class GUI extends JFrame {
       "Confirm Delete",
       JOptionPane.YES_NO_OPTION
     );
-    if (confirm != JOptionPane.YES_OPTION) return;
+    if (confirm != JOptionPane.YES_OPTION) {
+      return;
+    }
     cats.delete(selectedCat);
     CatData.delete(selectedCat);
     refreshDisplay(cats);
@@ -554,7 +557,9 @@ public class GUI extends JFrame {
   }
 
   private void choosePhoto() {
-    if (selectedCat == null) return;
+    if (selectedCat == null) {
+      return;
+    }
     JFileChooser fc = new JFileChooser();
     fc.setFileFilter(
       new javax.swing.filechooser.FileNameExtensionFilter(
@@ -587,7 +592,9 @@ public class GUI extends JFrame {
   }
 
   private void saveNotes() {
-    if (selectedCat == null) return;
+    if (selectedCat == null) {
+      return;
+    }
     selectedCat.notes = notesArea.getText();
     CatData.updateNotes(selectedCat);
   }
@@ -648,13 +655,17 @@ public class GUI extends JFrame {
     if ("Available".equals(adoptedStr)) {
       CatLinkedList filtered = new CatLinkedList();
       for (Cat cat : results) {
-        if (cat.adopted == null) filtered.add(cat);
+        if (cat.adopted == null) {
+          filtered.add(cat);
+        }
       }
       results = filtered;
     } else if ("Adopted".equals(adoptedStr)) {
       CatLinkedList filtered = new CatLinkedList();
       for (Cat cat : results) {
-        if (cat.adopted != null) filtered.add(cat);
+        if (cat.adopted != null) {
+          filtered.add(cat);
+        }
       }
       results = filtered;
     }
@@ -672,12 +683,18 @@ public class GUI extends JFrame {
   }
 
   private void applyCurrentSort() {
-    if (displayedCats == null) return;
+    if (displayedCats == null) {
+      return;
+    }
     Cat prev = selectedCat;
     displayedCats.sort(currentComparator());
     listModel.clear();
-    for (Cat cat : displayedCats) listModel.addElement(cat);
-    if (prev != null) catJList.setSelectedValue(prev, true);
+    for (Cat cat : displayedCats) {
+      listModel.addElement(cat);
+    }
+    if (prev != null) {
+      catJList.setSelectedValue(prev, true);
+    }
   }
 
   private void updateBornDays() {
@@ -698,10 +715,12 @@ public class GUI extends JFrame {
     int maxDays = selectedMonth.getMaxDays(selectedYear);
     Integer currentDay = (Integer) dayBox.getSelectedItem();
     dayBox.removeAllItems();
-    for (int i = 1; i <= maxDays; i++) dayBox.addItem(i);
-    if (currentDay != null && currentDay <= maxDays) dayBox.setSelectedItem(
-      currentDay
-    );
+    for (int i = 1; i <= maxDays; i++) {
+      dayBox.addItem(i);
+    }
+    if (currentDay != null && currentDay <= maxDays) {
+      dayBox.setSelectedItem(currentDay);
+    }
   }
 
   private JLabel subHeader(String text) {

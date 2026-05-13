@@ -30,8 +30,12 @@ public class CatLinkedListIterator implements Iterator<Cat> {
     if (
       modCount != list.getModCount()
     ) throw new ConcurrentModificationException();
-    if (current == null) throw new NoSuchElementException();
-    if (lastReturned != null) prev = lastReturned;
+    if (current == null) {
+      throw new NoSuchElementException();
+    }
+    if (lastReturned != null) {
+      prev = lastReturned;
+    }
     lastReturned = current;
     current = current.getNext();
     return lastReturned.getValue();
@@ -39,10 +43,12 @@ public class CatLinkedListIterator implements Iterator<Cat> {
 
   @Override
   public void remove() {
-    if (lastReturned == null) throw new IllegalStateException();
-    if (
-      modCount != list.getModCount()
-    ) throw new ConcurrentModificationException();
+    if (lastReturned == null) {
+      throw new IllegalStateException();
+    }
+    if (modCount != list.getModCount()) {
+      throw new ConcurrentModificationException();
+    }
     list.removeNode(prev, lastReturned);
     modCount = list.getModCount();
     lastReturned = null;

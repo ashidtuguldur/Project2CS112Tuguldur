@@ -72,13 +72,17 @@ public class CatLinkedList implements Iterable<Cat> {
     }
     newNode.setNext(current.getNext());
     current.setNext(newNode);
-    if (newNode.getNext() == null) tail = newNode;
+    if (newNode.getNext() == null) {
+      tail = newNode;
+    }
     modCount++;
   }
 
   public boolean contains(Cat value) {
     for (Cat cat : this) {
-      if (cat.equals(value)) return true;
+      if (cat.equals(value)) {
+        return true;
+      }
     }
     return false;
   }
@@ -86,7 +90,9 @@ public class CatLinkedList implements Iterable<Cat> {
   @SuppressWarnings("unused")
   public int size() {
     int count = 0;
-    for (Cat cat : this) count++;
+    for (Cat cat : this) {
+      count++;
+    }
     return count;
   }
 
@@ -121,9 +127,14 @@ public class CatLinkedList implements Iterable<Cat> {
   }
 
   void removeNode(Node<Cat> prev, Node<Cat> node) {
-    if (prev == null) head = node.getNext();
-    else prev.setNext(node.getNext());
-    if (node == tail) tail = prev;
+    if (prev == null) {
+      head = node.getNext();
+    } else {
+      prev.setNext(node.getNext());
+    }
+    if (node == tail) {
+      tail = prev;
+    }
     modCount++;
   }
 
@@ -139,16 +150,24 @@ public class CatLinkedList implements Iterable<Cat> {
       if (
         name != null && !c.name.toLowerCase().contains(name.toLowerCase())
       ) continue;
-      if (pattern != null && c.pattern != pattern) continue;
-      if (minW != null && c.weight < minW) continue;
-      if (maxW != null && c.weight > maxW) continue;
+      if (pattern != null && c.pattern != pattern) {
+        continue;
+      }
+      if (minW != null && c.weight < minW) {
+        continue;
+      }
+      if (maxW != null && c.weight > maxW) {
+        continue;
+      }
       if (dateQuery != null) {
         String q = dateQuery.toLowerCase();
         boolean matchesBorn = c.born.toString().toLowerCase().contains(q);
         boolean matchesCame = c.came.toString().toLowerCase().contains(q);
         boolean matchesAdopted =
           c.adopted != null && c.adopted.toString().toLowerCase().contains(q);
-        if (!matchesBorn && !matchesCame && !matchesAdopted) continue;
+        if (!matchesBorn && !matchesCame && !matchesAdopted) {
+          continue;
+        }
       }
       results.add(c);
     }
@@ -173,16 +192,22 @@ public class CatLinkedList implements Iterable<Cat> {
   }
 
   public void sort(Comparator<Cat> comparator) {
-    if (head == null || head.getNext() == null) return;
+    if (head == null || head.getNext() == null) {
+      return;
+    }
     head = mergeSort(head, comparator);
     Node<Cat> t = head;
-    while (t.getNext() != null) t = t.getNext();
+    while (t.getNext() != null) {
+      t = t.getNext();
+    }
     tail = t;
     modCount++;
   }
 
   private Node<Cat> mergeSort(Node<Cat> node, Comparator<Cat> comparator) {
-    if (node == null || node.getNext() == null) return node;
+    if (node == null || node.getNext() == null) {
+      return node;
+    }
     Node<Cat> mid = getMid(node);
     Node<Cat> second = mid.getNext();
     mid.setNext(null);

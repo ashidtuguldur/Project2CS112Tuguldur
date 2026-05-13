@@ -31,13 +31,21 @@ public final class Cat implements Comparable<Cat> {
   @Override
   public int compareTo(Cat other) {
     int cmp = this.name.compareToIgnoreCase(other.name);
-    if (cmp != 0) return cmp;
+    if (cmp != 0) {
+      return cmp;
+    }
     cmp = this.born.compareTo(other.born);
-    if (cmp != 0) return cmp;
+    if (cmp != 0) {
+      return cmp;
+    }
     cmp = this.came.compareTo(other.came);
-    if (cmp != 0) return cmp;
+    if (cmp != 0) {
+      return cmp;
+    }
     cmp = Integer.compare(this.pattern.ordinal(), other.pattern.ordinal());
-    if (cmp != 0) return cmp;
+    if (cmp != 0) {
+      return cmp;
+    }
     return this.weight.compareTo(other.weight);
   }
 
@@ -66,8 +74,12 @@ public final class Cat implements Comparable<Cat> {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (!(obj instanceof Cat)) return false;
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof Cat)) {
+      return false;
+    }
     Cat other = (Cat) obj;
     return (
       this.name.equals(other.name) &&
